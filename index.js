@@ -102,23 +102,33 @@ async function handleMessage(sender_psid, received_message) {
         let text = received_message.text.trim().toLowerCase();
         let response;
 
-        // Envia "digitando..."
-        if (sender_psid !== 'SIMULATOR') {
-            await callSendAPI(sender_psid, { "sender_action": "typing_on" });
-            await delay(1500); // Espera 1.5 segundos
-        }
-
-        if (text === '1') {
+        if (text === '1' || text.includes('foto')) {
+            if (sender_psid !== 'SIMULATOR') {
+                await callSendAPI(sender_psid, { "sender_action": "typing_on" });
+                await delay(1500); 
+            }
             response = { "text": "Ótima escolha! 📸 \nMinhas fotos super sexys para alegrar o seu dia custam apenas 50 Meticais.\n\nPara receber agora, faça o pagamento para a conta abaixo:\n📱 Número: 871300743\n👤 Nome: Helena\n\nAssim que pagar, mande a foto do comprovante aqui nesta conversa e eu te envio as fotos na hora! 🔥" };
-        } else if (text === '2') {
+        } else if (text === '2' || text.includes('4 video') || text.includes('4 vídeo')) {
+            if (sender_psid !== 'SIMULATOR') {
+                await callSendAPI(sender_psid, { "sender_action": "typing_on" });
+                await delay(1500); 
+            }
             response = { "text": "Excelente! 🎥 \nOs 4 vídeos quentes de 3 a 5 minutos custam apenas 45 Meticais.\n\nPara receber agora, faça o pagamento para a conta abaixo:\n📱 Número: 871300743\n👤 Nome: Helena\n\nAssim que pagar, mande a foto do comprovante aqui nesta conversa e eu te envio os vídeos na hora! 🔥" };
-        } else if (text === '3') {
+        } else if (text === '3' || text.includes('5 video') || text.includes('5 vídeo') || (text.includes('video') && !text.includes('4'))) {
+            if (sender_psid !== 'SIMULATOR') {
+                await callSendAPI(sender_psid, { "sender_action": "typing_on" });
+                await delay(1500); 
+            }
             response = { "text": "Perfeito! 🎥 \nO pacote premium com 5 vídeos de 5 a 7 minutos custa 90 Meticais.\n\nPara receber agora, faça o pagamento para a conta abaixo:\n📱 Número: 871300743\n👤 Nome: Helena\n\nAssim que pagar, mande a foto do comprovante aqui nesta conversa e eu te envio os vídeos na hora! 🔥" };
         } else {
-            // Qualquer outra mensagem, envia o menu principal
+            // Qualquer outra mensagem, envia o menu principal com um atraso maior (6 segundos) para parecer mais natural
+            if (sender_psid !== 'SIMULATOR') {
+                await callSendAPI(sender_psid, { "sender_action": "typing_on" });
+                await delay(6000); 
+            }
             const user = await getUserProfile(sender_psid);
             response = {
-                "text": `Oi ${user.first_name}, tenho conteúdo VIP +18 exclusivo para você 🔥\n\nDigite o NÚMERO do pacote que você quer para ter acesso agora mesmo:\n\n1 👉 Minhas fotos super sexys para alegrar o seu dia (50 Meticais)\n2 👉 4 Vídeos de 3 a 5 minutos (45 Meticais)\n3 👉 5 Vídeos de 5 a 7 minutos (90 Meticais)\n\n⚠️ Aviso: Eu só respondo quem realmente quer comprar. Não estou aqui para conversinha, o papo é reto. 😈`
+                "text": `Oi ${user.first_name}, tenho conteúdo VIP +18 exclusivo para você 🔥\n\n👇 Responda esta mensagem digitando apenas o NÚMERO 1, 2 ou 3 e aperte Enviar para escolher seu pacote:\n\n1 👉 Minhas fotos super sexys para alegrar o seu dia (50 Meticais)\n2 👉 4 Vídeos de 3 a 5 minutos (45 Meticais)\n3 👉 5 Vídeos de 5 a 7 minutos (90 Meticais)\n\n⚠️ Aviso: Eu só respondo quem realmente quer comprar. Não estou aqui para conversinha, o papo é reto. 😈`
             };
         }
 
