@@ -97,51 +97,30 @@ async function handleMessage(sender_psid, received_message) {
         return; 
     }
 
-    // 2.5 TRATAR QUICK REPLIES (CLIQUES NOS BOTÕES)
-    if (received_message.quick_reply) {
-        let payload = received_message.quick_reply.payload;
-        let response;
-        
-        if (sender_psid !== 'SIMULATOR') {
-            await callSendAPI(sender_psid, { "sender_action": "typing_on" });
-            await delay(1000);
-        }
-
-        if (payload === 'PACOTE_FOTOS') {
-            response = { "text": "Ótima escolha! 📸 O pacote com 5 fotos exclusivas custa R$ X. Para ter acesso agora, basta fazer o pagamento via PIX (Chave: seu@email.com). Mande o comprovante aqui!" };
-        } else if (payload === 'PACOTE_VIDEOS') {
-            response = { "text": "Excelente! 🎥 O pacote de vídeos exclusivos custa R$ Y. Para ter acesso, basta fazer o PIX (Chave: seu@email.com). Mande o comprovante aqui!" };
-        }
-
-        if (sender_psid === 'SIMULATOR') return response;
-        return callSendAPI(sender_psid, response);
-    }
-
     // 3. FLUXO NORMAL DE ATENDIMENTO
     if (received_message.text) {
+        let text = received_message.text.trim().toLowerCase();
+        let response;
+
         // Envia "digitando..."
         if (sender_psid !== 'SIMULATOR') {
             await callSendAPI(sender_psid, { "sender_action": "typing_on" });
             await delay(1500); // Espera 1.5 segundos
         }
 
-        const user = await getUserProfile(sender_psid);
-
-        let response = {
-            "text": `Oi ${user.first_name}, seja muito bem-vindo(a)! ✨\n\nTenho conteúdos VIP super exclusivos que você vai adorar 🔥\n\nEscolha um dos pacotes abaixo para acessar agora mesmo: 👇`,
-            "quick_replies": [
-                {
-                    "content_type": "text",
-                    "title": "📸 Pacote 5 Fotos",
-                    "payload": "PACOTE_FOTOS"
-                },
-                {
-                    "content_type": "text",
-                    "title": "🎥 Pacote Vídeos",
-                    "payload": "PACOTE_VIDEOS"
-                }
-            ]
-        };
+        if (text === '1') {
+            response = { "text": "Ótima escolha! 📸 \nMinhas fotos super sexys para alegrar o seu dia custam apenas 50 Meticais.\n\nPara receber agora, faça o pagamento para a conta abaixo:\n📱 Número: 871300743\n👤 Nome: Helena\n\nAssim que pagar, mande a foto do comprovante aqui nesta conversa e eu te envio as fotos na hora! 🔥" };
+        } else if (text === '2') {
+            response = { "text": "Excelente! 🎥 \nOs 4 vídeos quentes de 3 a 5 minutos custam apenas 45 Meticais.\n\nPara receber agora, faça o pagamento para a conta abaixo:\n📱 Número: 871300743\n👤 Nome: Helena\n\nAssim que pagar, mande a foto do comprovante aqui nesta conversa e eu te envio os vídeos na hora! 🔥" };
+        } else if (text === '3') {
+            response = { "text": "Perfeito! 🎥 \nO pacote premium com 5 vídeos de 5 a 7 minutos custa 90 Meticais.\n\nPara receber agora, faça o pagamento para a conta abaixo:\n📱 Número: 871300743\n👤 Nome: Helena\n\nAssim que pagar, mande a foto do comprovante aqui nesta conversa e eu te envio os vídeos na hora! 🔥" };
+        } else {
+            // Qualquer outra mensagem, envia o menu principal
+            const user = await getUserProfile(sender_psid);
+            response = {
+                "text": `Oi ${user.first_name}, tenho conteúdo VIP +18 exclusivo para você 🔥\n\nDigite o NÚMERO do pacote que você quer para ter acesso agora mesmo:\n\n1 👉 Minhas fotos super sexys para alegrar o seu dia (50 Meticais)\n2 👉 4 Vídeos de 3 a 5 minutos (45 Meticais)\n3 👉 5 Vídeos de 5 a 7 minutos (90 Meticais)\n\n⚠️ Aviso: Eu só respondo quem realmente quer comprar. Não estou aqui para conversinha, o papo é reto. 😈`
+            };
+        }
 
         if (sender_psid === 'SIMULATOR') return response;
         await callSendAPI(sender_psid, response);
