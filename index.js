@@ -8,10 +8,11 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 const PORT = process.env.PORT || 3000;
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const VERIFY_TOKEN = (process.env.VERIFY_TOKEN || 'minhasenhasecreta123').trim();
+const PAGE_ACCESS_TOKEN = (process.env.PAGE_ACCESS_TOKEN || '').trim();
 
 // Variável global para controlar se o bot está ligado ou desligado
+// (Forçando um novo deploy no Vercel)
 let isBotOn = true;
 
 app.get('/webhook', (req, res) => {
@@ -85,7 +86,7 @@ async function handleMessage(sender_psid, received_message) {
         
         if (text === '/ligar') {
             isBotOn = true;
-            let msg = { "text": "✅ Bot ativado. Respostas automáticas ligadas." };
+            let msg = { "text": "✅ Bot ativado (v2). Respostas automáticas ligadas." };
             if (sender_psid === 'SIMULATOR') return msg;
             return callSendAPI(sender_psid, msg);
         }
@@ -94,6 +95,26 @@ async function handleMessage(sender_psid, received_message) {
     // 2. SE O BOT ESTIVER DESLIGADO, ELE NÃO FAZ NADA
     if (!isBotOn) {
         return; 
+    }
+
+    // 2.5 TRATAR QUICK REPLIES (CLIQUES NOS BOTÕES)
+    if (received_message.quick_reply) {
+        let payload = received_message.quick_reply.payload;
+        let response;
+        
+        if (sender_psid !== 'SIMULATOR') {
+            await callSendAPI(sender_psid, { "sender_action": "typing_on" });
+            await delay(1000);
+        }
+
+        if (payload === 'PACOTE_FOTOS') {
+            response = { "text": "Ótima escolha! 📸 O pacote com 5 fotos exclusivas custa R$ X. Para ter acesso agora, basta fazer o pagamento via PIX (Chave: seu@email.com). Mande o comprovante aqui!" };
+        } else if (payload === 'PACOTE_VIDEOS') {
+            response = { "text": "Excelente! 🎥 O pacote de vídeos exclusivos custa R$ Y. Para ter acesso, basta fazer o PIX (Chave: seu@email.com). Mande o comprovante aqui!" };
+        }
+
+        if (sender_psid === 'SIMULATOR') return response;
+        return callSendAPI(sender_psid, response);
     }
 
     // 3. FLUXO NORMAL DE ATENDIMENTO
@@ -107,31 +128,19 @@ async function handleMessage(sender_psid, received_message) {
         const user = await getUserProfile(sender_psid);
 
         let response = {
-            "attachment": {
-                "type": "template",
-                "payload": {
-                    "template_type": "generic",
-                    "elements": [
-                        {
-                            "title": `Oi ${user.first_name}, seja bem-vindo(a)! ✨`,
-                            "image_url": "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                            "subtitle": "Tenho conteúdos exclusivos que você vai adorar. Escolha um pacote abaixo 👇",
-                            "buttons": [
-                                {
-                                    "type": "postback",
-                                    "title": "📸 Pacote 5 Fotos",
-                                    "payload": "PACOTE_FOTOS"
-                                },
-                                {
-                                    "type": "postback",
-                                    "title": "🎥 Pacote Vídeos",
-                                    "payload": "PACOTE_VIDEOS"
-                                }
-                            ]
-                        }
-                    ]
+            "text": `Oi ${user.first_name}, seja bem-vindo(a)! ✨\n\nTenho conteúdos exclusivos que você vai adorar. Escolha um pacote abaixo 👇`,
+            "quick_replies": [
+                {
+                    "content_type": "text",
+                    "title": "📸 Pacote 5 Fotos",
+                    "payload": "PACOTE_FOTOS"
+                },
+                {
+                    "content_type": "text",
+                    "title": "🎥 Pacote Vídeos",
+                    "payload": "PACOTE_VIDEOS"
                 }
-            }
+            ]
         };
 
         if (sender_psid === 'SIMULATOR') return response;
@@ -205,3 +214,5 @@ async function callSendAPI(sender_psid, message) {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT} 🚀`);
 });
+
+module.exports = app;
