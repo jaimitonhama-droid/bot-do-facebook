@@ -128,19 +128,25 @@ async function handleMessage(sender_psid, received_message) {
         const user = await getUserProfile(sender_psid);
 
         let response = {
-            "text": `Oi ${user.first_name}, seja bem-vindo(a)! ✨\n\nTenho conteúdos exclusivos que você vai adorar. Escolha um pacote abaixo 👇`,
-            "quick_replies": [
-                {
-                    "content_type": "text",
-                    "title": "📸 Pacote 5 Fotos",
-                    "payload": "PACOTE_FOTOS"
-                },
-                {
-                    "content_type": "text",
-                    "title": "🎥 Pacote Vídeos",
-                    "payload": "PACOTE_VIDEOS"
+            "attachment": {
+                "type": "template",
+                "payload": {
+                    "template_type": "button",
+                    "text": `Oi ${user.first_name}, seja muito bem-vindo(a)! ✨\n\nTenho conteúdos VIP super exclusivos que você vai adorar 🔥\n\nEscolha um dos pacotes abaixo para acessar agora mesmo: 👇`,
+                    "buttons": [
+                        {
+                            "type": "postback",
+                            "title": "📸 Pacote 5 Fotos VIP",
+                            "payload": "PACOTE_FOTOS"
+                        },
+                        {
+                            "type": "postback",
+                            "title": "🎥 Pacote Vídeos VIP",
+                            "payload": "PACOTE_VIDEOS"
+                        }
+                    ]
                 }
-            ]
+            }
         };
 
         if (sender_psid === 'SIMULATOR') return response;
