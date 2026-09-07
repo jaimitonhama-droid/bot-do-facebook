@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador do Bot - Facebook Messenger</title>
+    <style>
+        :root {
+            --primary: #0084ff;
+            --bg-color: #f0f2f5;
+            --chat-bg: #ffffff;
+            --bot-msg-bg: #e4e6eb;
+            --user-msg-bg: #0084ff;
+            --text-dark: #050505;
+            --text-light: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background-color: var(--chat-bg);
+            border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 8px solid #333;
+            position: relative;
+        }
+
+        .header {
+            background-color: var(--chat-bg);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .header-text h2 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--text-dark);
+            text-align: left;
+        }
+        
+        .header-text p {
+            margin: 0;
+            font-size: 12px;
+            color: #65676B;
+            text-align: left;
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #ffffff;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease-out;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-message {
+            background-color: var(--bot-msg-bg);
+            color: var(--text-dark);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .user-message {
+            background-color: var(--user-msg-bg);
+            color: var(--text-light);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .postback-btn {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .postback-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .input-area {
+            padding: 15px;
+            background-color: var(--chat-bg);
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            outline: none;
+            font-size: 15px;
+            background-color: #f0f2f5;
+        }
+
+        .send-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: transform 0.1s;
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background-color: var(--bot-msg-bg);
+            padding: 12px 16px;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #90949c;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.3s linear infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: -1.1s; }
+        .dot:nth-child(3) { animation-delay: -0.9s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        /* Notice to User */
+        .notice {
+            position: absolute;
+            left: -320px;
+            top: 20px;
+            width: 280px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .notice h3 { margin-top: 0; color: var(--primary); }
+
+        .generic-card {
+            display: flex;
+            flex-direction: column;
+            width: 250px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .generic-img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+        }
+
+        .generic-info {
+            padding: 12px;
+        }
+        
+        .generic-title {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .generic-subtitle {
+            font-size: 13px;
+            color: #65676B;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="notice">
+        <h3>✨ O Seu Bot!</h3>
+        <p>Você pediu para ver a estrutura completa e poder tocar. Como o bot original mora dentro do aplicativo do Facebook no celular, eu criei este <b>Simulador de Celular</b> para você testar a lógica dele aqui mesmo no seu computador!</p>
+        <p>Mande um "Oi" para ele e veja os botões aparecendo.</p>
+    </div>
+
+    <div class="phone-container">
+        <div class="header">
+            <div class="profile-pic">🤖</div>
+            <div class="header-text">
+                <h2>Seu Bot Automático</h2>
+                <p>Responde instantaneamente</p>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chat-area">
+            <!-- Messages will appear here -->
+        </div>
+
+        <div class="typing-indicator" id="typing">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" class="input-field" id="message-input" placeholder="Digite uma mensagem..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const chatArea = document.getElementById('chat-area');
+        const messageInput = document.getElementById('message-input');
+        const typingIndicator = document.getElementById('typing');
+
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}-message`;
+            msgDiv.innerText = text;
+            chatArea.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function appendGenericTemplate(element) {
+            const containerDiv = document.createElement('div');
+            containerDiv.className = `message bot-message`;
+            containerDiv.style.padding = '0';
+            containerDiv.style.background = 'transparent';
+
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'generic-card';
+            
+            if (element.image_url) {
+                const img = document.createElement('img');
+                img.src = element.image_url;
+                img.className = 'generic-img';
+                cardDiv.appendChild(img);
+            }
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'generic-info';
+
+            const title = document.createElement('div');
+            title.className = 'generic-title';
+            title.innerText = element.title;
+            infoDiv.appendChild(title);
+
+            if (element.subtitle) {
+                const subtitle = document.createElement('div');
+                subtitle.className = 'generic-subtitle';
+                subtitle.innerText = element.subtitle;
+                infoDiv.appendChild(subtitle);
+            }
+
+            const btnsDiv = document.createElement('div');
+            btnsDiv.className = 'buttons-container';
+            
+            element.buttons.forEach(btn => {
+                const buttonEl = document.createElement('button');
+                buttonEl.className = 'postback-btn';
+                buttonEl.innerText = btn.title;
+                buttonEl.onclick = () => sendPostback(btn.payload, btn.title);
+                btnsDiv.appendChild(buttonEl);
+            });
+
+            infoDiv.appendChild(btnsDiv);
+            cardDiv.appendChild(infoDiv);
+            containerDiv.appendChild(cardDiv);
+            
+            chatArea.appendChild(containerDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user');
+            messageInput.value = '';
+            
+            await simulateBotResponse({ type: 'message', text: text });
+        }
+
+        async function sendPostback(payload, title) {
+            appendMessage(`(Clicou em: ${title})`, 'user');
+            await simulateBotResponse({ type: 'postback', payload: payload });
+        }
+
+        async function simulateBotResponse(data) {
+            showTyping();
+            
+            try {
+                const response = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                hideTyping();
+
+                if (result.attachment && result.attachment.type === 'template') {
+                    if (result.attachment.payload.template_type === 'generic') {
+                        appendGenericTemplate(result.attachment.payload.elements[0]);
+                    }
+                } else if (result.text) {
+                    appendMessage(result.text, 'bot');
+                }
+
+            } catch (err) {
+                hideTyping();
+                appendMessage("Erro ao conectar com o servidor.", 'bot');
+            }
+        }
+
+        function showTyping() {
+            chatArea.appendChild(typingIndicator);
+            typingIndicator.style.display = 'block';
+            scrollToBottom();
+        }
+
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+        
+        // Initial Greeting Simulation
+        setTimeout(() => {
+            appendMessage("Envie um 'Oi' para testar o seu novo bot! 👇", 'bot');
+        }, 500);
+
+    </script>
+</body>
+</html>
